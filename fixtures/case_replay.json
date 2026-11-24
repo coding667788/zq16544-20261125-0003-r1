@@ -1,0 +1,213 @@
+{
+  "schema": "folioimpact.case/v1",
+  "case_id": "archivist-replay-001",
+  "notes": "All identifiers and values are synthetic. Intervals are half-open integer epoch seconds.",
+  "groups": [
+    {"id": "g_archive", "sites": ["north", "south"]}
+  ],
+  "sensitive_groups": [
+    {"id": "sg_ledger", "protection_cap": 1},
+    {"id": "sg_map", "protection_cap": 0}
+  ],
+  "independent_segments": [
+    {"id": "alpha", "sensitive_group": "sg_ledger"},
+    {"id": "beta", "sensitive_group": "sg_ledger"},
+    {"id": "gamma", "sensitive_group": "sg_map"},
+    {"id": "alpha_fold_source", "sensitive_group": "sg_ledger"}
+  ],
+  "segment_versions": [
+    {"id": "sv_a1", "independent_segment": "alpha"},
+    {"id": "sv_a2", "independent_segment": "alpha"},
+    {"id": "sv_b1", "independent_segment": "beta"},
+    {"id": "sv_g1", "independent_segment": "gamma"},
+    {"id": "sv_fold1", "independent_segment": "alpha_fold_source"}
+  ],
+  "document_versions": [
+    {"id": "dv_open_ledger_v1", "segment_versions": ["sv_a1", "sv_b1", "sv_g1"]},
+    {"id": "dv_closed_summary_v2", "segment_versions": ["sv_a2", "sv_fold1"]}
+  ],
+  "pages": [
+    {"id": "pg_a1", "segment_version": "sv_a1"},
+    {"id": "pg_a2", "segment_version": "sv_a2"},
+    {"id": "pg_b1", "segment_version": "sv_b1"},
+    {"id": "pg_g1", "segment_version": "sv_g1"},
+    {
+      "id": "pg_fold_summary",
+      "segment_version": "sv_fold1",
+      "folded_summary_of": "pg_a1",
+      "equivalence_proven": true
+    }
+  ],
+  "time_slices": [
+    {"id": "ts_open_copy", "interval": [1700000100, 1700000120]},
+    {"id": "ts_south_review", "interval": [1700000260, 1700000280]},
+    {"id": "ts_after_seal", "interval": [1700002000, 1700002100]}
+  ],
+  "witnesses": [
+    {
+      "id": "w_north_holding",
+      "group": "g_archive",
+      "site": "north",
+      "interval": [1700000000, 1700001000],
+      "alternatives": ["dv_open_ledger_v1", "dv_closed_summary_v2"],
+      "variable": "x_ledger_edition"
+    }
+  ],
+  "handoffs": [
+    {
+      "id": "ho_north_to_south",
+      "group": "g_archive",
+      "from_site": "north",
+      "to_site": "south",
+      "interval": [1700000200, 1700000300]
+    }
+  ],
+  "review_copies": [
+    {
+      "id": "rc_north_desk",
+      "group": "g_archive",
+      "site": "north",
+      "interval": [1700000050, 1700000180],
+      "pages": ["pg_a1", "pg_a2", "pg_b1", "pg_g1"]
+    },
+    {
+      "id": "rc_south_desk",
+      "group": "g_archive",
+      "site": "south",
+      "interval": [1700000250, 1700000400],
+      "pages": ["pg_a1", "pg_a2", "pg_b1", "pg_fold_summary"]
+    }
+  ],
+  "mandatory_reviews": [
+    {
+      "id": "mr_north_ledger_minimum",
+      "review_copy": "rc_north_desk",
+      "time_slice": "ts_open_copy",
+      "sensitive_group": "sg_ledger",
+      "minimum_independent_segments": 1,
+      "required_segments": ["alpha"]
+    }
+  ],
+  "protection_targets": [
+    {"group": "g_archive", "sensitive_group": "sg_ledger", "time_slice": "ts_open_copy", "cap": 1},
+    {"group": "g_archive", "sensitive_group": "sg_ledger", "time_slice": "ts_south_review", "cap": 1},
+    {"group": "g_archive", "sensitive_group": "sg_map", "time_slice": "ts_open_copy", "cap": 0},
+    {"group": "g_archive", "sensitive_group": "sg_ledger", "time_slice": "ts_after_seal", "cap": 0}
+  ],
+  "countermeasures": {
+    "selected_action_ids": ["A01_safe_north_alternative", "A04_shorten_north_holding"]
+  },
+  "mitigation_actions": [
+    {
+      "id": "A01_safe_north_alternative",
+      "kind": "replace_version",
+      "cost": 2,
+      "target": "rc_north_desk",
+      "replacement_pages": ["pg_a1"],
+      "effect": "Certified one-segment alternative preserves the mandatory alpha boundary."
+    },
+    {
+      "id": "A02_stop_north_review",
+      "kind": "suspend_review",
+      "cost": 1,
+      "target": "rc_north_desk"
+    },
+    {
+      "id": "A03_trim_north_review",
+      "kind": "shorten_interval",
+      "cost": 1,
+      "target": "rc_north_desk",
+      "interval": [1700000060, 1700000170]
+    },
+    {
+      "id": "A04_shorten_north_holding",
+      "kind": "shorten_interval",
+      "cost": 1,
+      "target": "w_north_holding",
+      "interval": [1700000000, 1700000049]
+    },
+    {
+      "id": "A05_trim_handoff_before_south",
+      "kind": "shorten_interval",
+      "cost": 1,
+      "target": "ho_north_to_south",
+      "interval": [1700000200, 1700000240]
+    },
+    {
+      "id": "A06_safe_south_alternative",
+      "kind": "replace_version",
+      "cost": 2,
+      "target": "rc_south_desk",
+      "replacement_pages": ["pg_a2"]
+    },
+    {
+      "id": "A07_stop_south_review",
+      "kind": "suspend_review",
+      "cost": 1,
+      "target": "rc_south_desk"
+    },
+    {
+      "id": "A08_trim_south_before_slice",
+      "kind": "shorten_interval",
+      "cost": 1,
+      "target": "rc_south_desk",
+      "interval": [1700000250, 1700000259]
+    },
+    {
+      "id": "A09_trim_holding_keep_north",
+      "kind": "shorten_interval",
+      "cost": 1,
+      "target": "w_north_holding",
+      "interval": [1700000000, 1700000150]
+    },
+    {
+      "id": "A10_pause_north_during_slice",
+      "kind": "suspend_review",
+      "cost": 1,
+      "target": "rc_north_desk",
+      "pause_interval": [1700000100, 1700000120]
+    },
+    {
+      "id": "A11_broad_north_alternative",
+      "kind": "replace_version",
+      "cost": 1,
+      "target": "rc_north_desk",
+      "replacement_pages": ["pg_a1", "pg_b1", "pg_g1"]
+    },
+    {
+      "id": "A12_beta_only_north_alternative",
+      "kind": "replace_version",
+      "cost": 1,
+      "target": "rc_north_desk",
+      "replacement_pages": ["pg_b1"]
+    },
+    {
+      "id": "A13_trim_north_before_slice",
+      "kind": "shorten_interval",
+      "cost": 1,
+      "target": "rc_north_desk",
+      "interval": [1700000050, 1700000090]
+    },
+    {
+      "id": "A14_pause_south_during_slice",
+      "kind": "suspend_review",
+      "cost": 1,
+      "target": "rc_south_desk",
+      "pause_interval": [1700000260, 1700000280]
+    },
+    {
+      "id": "A15_tiny_south_trim",
+      "kind": "shorten_interval",
+      "cost": 1,
+      "target": "rc_south_desk",
+      "interval": [1700000260, 1700000280]
+    },
+    {
+      "id": "A16_beta_only_south_alternative",
+      "kind": "replace_version",
+      "cost": 1,
+      "target": "rc_south_desk",
+      "replacement_pages": ["pg_b1"]
+    }
+  ]
+}

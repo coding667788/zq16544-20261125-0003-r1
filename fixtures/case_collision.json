@@ -1,0 +1,94 @@
+{
+  "schema": "folioimpact.case/v1",
+  "case_id": "collision-no-plan-002",
+  "notes": "Synthetic contradiction: cap zero forbids every secret segment in every world, while mandatory review guarantees alpha in every world.",
+  "groups": [
+    {"id": "g_registry", "sites": ["central"]}
+  ],
+  "sensitive_groups": [
+    {"id": "sg_secret"},
+    {"id": "sg_other"}
+  ],
+  "independent_segments": [
+    {"id": "alpha", "sensitive_group": "sg_secret"},
+    {"id": "beta", "sensitive_group": "sg_secret"},
+    {"id": "zed_nonsecret", "sensitive_group": "sg_other"}
+  ],
+  "segment_versions": [
+    {"id": "sv_a", "independent_segment": "alpha"},
+    {"id": "sv_b", "independent_segment": "beta"},
+    {"id": "sv_z", "independent_segment": "zed_nonsecret"}
+  ],
+  "document_versions": [
+    {"id": "dv_alpha", "segment_versions": ["sv_a"]},
+    {"id": "dv_beta", "segment_versions": ["sv_b"]},
+    {"id": "dv_zed", "segment_versions": ["sv_z"]}
+  ],
+  "pages": [
+    {"id": "pg_a", "segment_version": "sv_a"},
+    {"id": "pg_b", "segment_version": "sv_b"},
+    {"id": "pg_z", "segment_version": "sv_z"}
+  ],
+  "time_slices": [
+    {"id": "ts_collision", "interval": [1000000100, 1000000120]}
+  ],
+  "witnesses": [
+    {
+      "id": "w_alpha_choice",
+      "group": "g_registry",
+      "site": "central",
+      "interval": [1000000000, 1000001000],
+      "alternatives": ["dv_alpha", "dv_zed"],
+      "variable": "x_alpha_or_not"
+    },
+    {
+      "id": "w_beta_choice",
+      "group": "g_registry",
+      "site": "central",
+      "interval": [1000000010, 1000000900],
+      "alternatives": ["dv_beta", "dv_zed"],
+      "variable": "y_beta_or_not"
+    }
+  ],
+  "handoffs": [],
+  "review_copies": [
+    {
+      "id": "rc_central",
+      "group": "g_registry",
+      "site": "central",
+      "interval": [1000000050, 1000000300],
+      "pages": ["pg_a", "pg_b"]
+    }
+  ],
+  "mandatory_reviews": [
+    {
+      "id": "mr_must_keep_alpha",
+      "review_copy": "rc_central",
+      "time_slice": "ts_collision",
+      "sensitive_group": "sg_secret",
+      "minimum_independent_segments": 1,
+      "required_segments": ["alpha"]
+    }
+  ],
+  "protection_targets": [
+    {"group": "g_registry", "sensitive_group": "sg_secret", "time_slice": "ts_collision", "cap": 0}
+  ],
+  "mitigation_actions": [
+    {"id": "A01_alpha_alternative", "kind": "replace_version", "cost": 1, "target": "rc_central", "replacement_pages": ["pg_a"]},
+    {"id": "A02_beta_alternative", "kind": "replace_version", "cost": 1, "target": "rc_central", "replacement_pages": ["pg_b"]},
+    {"id": "A03_empty_alternative", "kind": "replace_version", "cost": 1, "target": "rc_central", "replacement_pages": []},
+    {"id": "A04_stop_review", "kind": "suspend_review", "cost": 1, "target": "rc_central"},
+    {"id": "A05_pause_during_slice", "kind": "suspend_review", "cost": 1, "target": "rc_central", "pause_interval": [1000000100, 1000000120]},
+    {"id": "A06_trim_before_slice", "kind": "shorten_interval", "cost": 1, "target": "rc_central", "interval": [1000000050, 1000000090]},
+    {"id": "A07_trim_around_slice", "kind": "shorten_interval", "cost": 1, "target": "rc_central", "interval": [1000000090, 1000000130]},
+    {"id": "A08_end_alpha_holding_early", "kind": "shorten_interval", "cost": 1, "target": "w_alpha_choice", "interval": [1000000000, 1000000040]},
+    {"id": "A09_end_beta_holding_early", "kind": "shorten_interval", "cost": 1, "target": "w_beta_choice", "interval": [1000000010, 1000000040]},
+    {"id": "A10_shorten_alpha_holding_later", "kind": "shorten_interval", "cost": 1, "target": "w_alpha_choice", "interval": [1000000000, 1000000500]},
+    {"id": "A11_shorten_beta_holding_later", "kind": "shorten_interval", "cost": 1, "target": "w_beta_choice", "interval": [1000000010, 1000000500]},
+    {"id": "A12_useless_pause", "kind": "suspend_review", "cost": 1, "target": "rc_central", "pause_interval": [1000000050, 1000000060]},
+    {"id": "A13_broad_alternative", "kind": "replace_version", "cost": 2, "target": "rc_central", "replacement_pages": ["pg_a", "pg_b"]},
+    {"id": "A14_nonsecret_alternative", "kind": "replace_version", "cost": 1, "target": "rc_central", "replacement_pages": ["pg_z"]},
+    {"id": "A15_exact_slice_review", "kind": "shorten_interval", "cost": 1, "target": "rc_central", "interval": [1000000100, 1000000120]},
+    {"id": "A16_partial_pause", "kind": "suspend_review", "cost": 1, "target": "rc_central", "pause_interval": [1000000110, 1000000115]}
+  ]
+}
